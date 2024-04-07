@@ -109,10 +109,19 @@
 (defun platformio--run (runcmd &optional NOTSILENT)
   "Execute command RUNCMD, optionally NOTSILENT."
   (platformio--exec (concat "run "
-                  (unless NOTSILENT
-                    (platformio--silent-arg))
-                  runcmd)))
+                            (unless NOTSILENT
+                              (platformio--silent-arg))
+                            runcmd)))
 
+(defun platformio--projectile-has-platformio-project-p ()
+  "Determine whether Projectile knows about platformio projects."
+  (seq-find
+   #'(lambda (projectile-spec)
+       (let ((marker-files (plist-get (cdr projectile-spec) 'marker-files)))
+         (platformio-project-file "platformio.ini")
+         (if (consp marker-files)
+             (member platformio-project-file marker-files))))
+   projectile-project-types))
 
 ;;; Board list functions
 (defun platformio--add-board (board)
@@ -278,6 +287,10 @@
   :keymap platformio-mode-map
   :group 'platformio
   :require 'platformio)
+
+(if (not (platformio--projectile-has-platformio-project-p))
+    (projectile-register-project-type 'platformio '("platformio.ini") :project-file "platformio.ini"))
+
 
 (provide 'platformio-mode)
 ;;; platformio-mode.el ends here
